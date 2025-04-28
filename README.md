@@ -7,28 +7,32 @@ local mouse = player:GetMouse()
 
 local aimbotAtivo = false
 local menuAberto = true
-local aimbotRadius = 150 -- Tamanho inicial do círculo
+local aimbotRadius = 150
+local rightClickDown = false
 
 local playerGui = player:WaitForChild("PlayerGui")
 
-local screenGui = Instance.new("ScreenGui", playerGui)
+local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AimbotGUI"
+screenGui.Parent = playerGui
 
-local menuFrame = Instance.new("Frame", screenGui)
+local menuFrame = Instance.new("Frame")
 menuFrame.Size = UDim2.new(0, 200, 0, 100)
 menuFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
 menuFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 menuFrame.Visible = menuAberto
+menuFrame.Parent = screenGui
 
-local menuText = Instance.new("TextLabel", menuFrame)
+local menuText = Instance.new("TextLabel")
 menuText.Size = UDim2.new(1, 0, 1, 0)
 menuText.BackgroundTransparency = 1
 menuText.Text = "X: Ativar/Desativar Aimbot\nP: Abrir/Fechar Menu\nScroll: Mudar Raio"
 menuText.TextColor3 = Color3.new(1, 1, 1)
 menuText.Font = Enum.Font.SourceSans
 menuText.TextScaled = true
+menuText.Parent = menuFrame
 
-local statusLabel = Instance.new("TextLabel", screenGui)
+local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(0, 300, 0, 50)
 statusLabel.Position = UDim2.new(0.5, -150, 0.4, 0)
 statusLabel.BackgroundTransparency = 1
@@ -37,19 +41,21 @@ statusLabel.TextColor3 = Color3.new(1, 1, 1)
 statusLabel.Font = Enum.Font.SourceSansBold
 statusLabel.TextScaled = true
 statusLabel.Visible = false
+statusLabel.Parent = screenGui
 
-local aimCircle = Instance.new("Frame", screenGui)
+local aimCircle = Instance.new("Frame")
 aimCircle.Size = UDim2.new(0, aimbotRadius * 2, 0, aimbotRadius * 2)
-aimCircle.Position = UDim2.new(0.5, -aimbotRadius, 0.5, -aimbotRadius)
+aimCircle.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
 aimCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 aimCircle.BackgroundTransparency = 0.7
 aimCircle.BorderSizePixel = 0
-aimCircle.Visible = true
 aimCircle.AnchorPoint = Vector2.new(0.5, 0.5)
 aimCircle.ClipsDescendants = true
+aimCircle.Parent = screenGui
 
-local uicorner = Instance.new("UICorner", aimCircle)
+local uicorner = Instance.new("UICorner")
 uicorner.CornerRadius = UDim.new(1, 0)
+uicorner.Parent = aimCircle
 
 local function mostrarMensagem(texto, cor)
     statusLabel.Text = texto
@@ -122,6 +128,14 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         else
             mostrarMensagem("Aimbot Desativado!", Color3.new(1, 0, 0))
         end
+    elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+        rightClickDown = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        rightClickDown = false
     end
 end)
 
@@ -133,11 +147,10 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 RunService.RenderStepped:Connect(function()
+    -- Atualiza posição do círculo
     aimCircle.Position = UDim2.new(0, mouse.X, 0, mouse.Y)
-end)
 
-RunService.RenderStepped:Connect(function()
-    if aimbotAtivo and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+    if aimbotAtivo and rightClickDown then
         local target = getClosestTarget()
         if target then
             aimAt(target)
